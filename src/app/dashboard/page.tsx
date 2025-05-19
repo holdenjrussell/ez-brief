@@ -27,6 +27,12 @@ export default function DashboardPage() {
   const [newBrandName, setNewBrandName] = useState('')
   const [isCreatingBrand, setIsCreatingBrand] = useState(false)
   
+  console.log('[DashboardPage] MOUNT - Initial render with:', { 
+    isUserPresent: !!user, 
+    userEmail: user?.email || 'none',
+    isLoading 
+  });
+  
   useEffect(() => {
     console.log(`[DashboardPage] useEffect triggered. isLoading: ${isLoading}, User: ${user ? user.email : 'null'}`);
     if (!isLoading && !user) {
@@ -121,6 +127,30 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      
+      {/* Debug section */}
+      <Card className="mb-4 bg-yellow-50">
+        <CardHeader>
+          <CardTitle>Debug Controls</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push('/dashboard')} variant="outline">
+              Force Navigate to Dashboard
+            </Button>
+            <Button 
+              onClick={async () => {
+                const { supabase } = await import('@/lib/supabase/client');
+                const { data } = await supabase.auth.getSession();
+                alert(`Session check: ${data.session ? 'Auth session found' : 'No auth session'}`);
+              }} 
+              variant="outline"
+            >
+              Check Auth Session
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       
       <Suspense fallback={<div>Loading...</div>}>
         <Card className="mb-8">

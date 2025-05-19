@@ -49,6 +49,24 @@ export default function LoginPage() {
       
       console.log("[LoginPage] Login successful");
       
+      // Explicitly check what's in local storage after login
+      try {
+        const { supabase } = await import('@/lib/supabase/client');
+        const session = await supabase.auth.getSession();
+        console.log("[LoginPage] Session after login:", session.data.session ? "Present" : "Not present");
+        console.log("[LoginPage] User from session:", session.data.session?.user?.email || "None");
+        
+        // Check local storage
+        const authStorage = localStorage.getItem('supabase-auth');
+        console.log("[LoginPage] Auth data in localStorage:", authStorage ? "Present" : "Not present");
+      } catch (e) {
+        console.error("[LoginPage] Error checking session:", e);
+      }
+      
+      // Now redirect
+      console.log("[LoginPage] Attempting to navigate to dashboard...");
+      router.push('/dashboard');
+      
       // Manual refresh for additional state synchronization
       /* // REMOVED: SupabaseProvider's onAuthStateChange should handle refresh
       window.setTimeout(() => {

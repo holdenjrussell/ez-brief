@@ -25,6 +25,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
+      console.log('[SupabaseProvider] Getting session...');
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (error) {
@@ -37,9 +38,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       // Enhanced logging for debugging
       console.log('[SupabaseProvider] Current pathname:', pathname)
+      console.log('[SupabaseProvider] Session after getSession():', session ? 'Present' : 'Not present')
       console.log('[SupabaseProvider] Auth state:', session ? 'Authenticated' : 'Not authenticated')
       if (session?.user) {
         console.log('[SupabaseProvider] Logged in as:', session.user.email)
+        console.log('[SupabaseProvider] User ID:', session.user.id)
       }
     }
 
@@ -48,6 +51,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, currentSession: Session | null) => {
         console.log('[SupabaseProvider] Auth state changed:', event, currentSession ? 'Authenticated' : 'Not authenticated')
+        console.log('[SupabaseProvider] Session in onAuthStateChange:', currentSession ? 'Present' : 'Not present')
+        if (currentSession?.user) {
+          console.log('[SupabaseProvider] User in changed event:', currentSession.user.email)
+        }
         
         setSession(currentSession)
         setUser(currentSession?.user ?? null)
@@ -56,6 +63,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // Handling specific auth events for better page flow
         if (event === 'SIGNED_IN') {
           console.log('[SupabaseProvider] User signed in, refreshing session for redirect via middleware')
+          
+          // Check if browser storage contains auth data
+          try {
+            const authStorage = localStorage.getItem('supabase-auth')
+            console.log('[SupabaseProvider] Auth storage after SIGNED_IN:', authStorage ? 'Present' : 'Not present')
+          } catch (e) {
+            console.error('[SupabaseProvider] Error checking localStorage:', e)
+          }
+          
           router.refresh()
         } else if (event === 'SIGNED_OUT') {
           console.log('[SupabaseProvider] User signed out, refreshing session for redirect via middleware')
