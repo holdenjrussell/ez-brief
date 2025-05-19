@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
   const { signIn } = useSupabase()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,7 +22,7 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { data, error } = await signIn(email, password)
+      const { error } = await signIn(email, password)
       
       if (error) {
         throw error
