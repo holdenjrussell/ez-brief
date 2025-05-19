@@ -1,13 +1,31 @@
 'use client'
 
 import { useSupabase } from '@/components/providers/supabase-provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Suspense, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import Link from 'next/link'
+
+type Brand = {
+  id: string
+  name: string
+  logo_url: string | null
+  created_at: string
+}
 
 export default function DashboardPage() {
-  const { user, isLoading } = useSupabase()
+  const { user, isLoading, session } = useSupabase()
   const router = useRouter()
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [isLoadingBrands, setIsLoadingBrands] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [newBrandName, setNewBrandName] = useState('')
+  const [isCreatingBrand, setIsCreatingBrand] = useState(false)
   
   useEffect(() => {
     if (!isLoading && !user) {
@@ -15,6 +33,76 @@ export default function DashboardPage() {
       router.push('/login')
     }
   }, [user, isLoading, router])
+
+  // Fetch brands when the component mounts and user is available
+  useEffect(() => {
+    const fetchBrands = async () => {
+      if (!user) return
+      
+      try {
+        const { supabase } = await import('@/lib/supabase/client')
+        const { data, error } = await supabase
+          .from('brands')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) {
+          throw error
+        }
+        
+        setBrands(data as Brand[])
+      } catch (error) {
+        console.error('Error fetching brands:', error)
+        toast.error('Failed to load brands')
+      } finally {
+        setIsLoadingBrands(false)
+      }
+    }
+    
+    if (user) {
+      fetchBrands()
+    }
+  }, [user])
+
+  // Create new brand
+  const handleCreateBrand = async () => {
+    if (!newBrandName.trim()) {
+      toast.error('Please enter a brand name')
+      return
+    }
+    
+    setIsCreatingBrand(true)
+    
+    try {
+      const { supabase } = await import('@/lib/supabase/client')
+      const { data, error } = await supabase
+        .from('brands')
+        .insert([{
+          user_id: user?.id,
+          name: newBrandName.trim()
+        }])
+        .select()
+      
+      if (error) {
+        throw error
+      }
+      
+      setNewBrandName('')
+      setDialogOpen(false)
+      toast.success('Brand created successfully')
+      
+      // Add the new brand to the state
+      if (data && data.length > 0) {
+        setBrands(prevBrands => [data[0] as Brand, ...prevBrands])
+      }
+      
+    } catch (error) {
+      console.error('Error creating brand:', error)
+      toast.error('Failed to create brand')
+    } finally {
+      setIsCreatingBrand(false)
+    }
+  }
 
   // If still loading or no user, show loading state
   if (isLoading) {
@@ -45,6 +133,72 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+        
+        {/* Brands Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Your Brands</h2>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Add New Brand</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create a new brand</DialogTitle>
+                  <DialogDescription>
+                    Enter the name for your new brand.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Label htmlFor="brand-name">Brand Name</Label>
+                  <Input 
+                    id="brand-name" 
+                    value={newBrandName} 
+                    onChange={(e) => setNewBrandName(e.target.value)} 
+                    placeholder="Enter brand name"
+                    className="mt-2"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={handleCreateBrand} 
+                    disabled={isCreatingBrand || !newBrandName.trim()}
+                  >
+                    {isCreatingBrand ? 'Creating...' : 'Create Brand'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {isLoadingBrands ? (
+            <div className="text-center py-10">Loading brands...</div>
+          ) : brands.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <p className="text-gray-500 mb-4">You don't have any brands yet</p>
+                <Button onClick={() => setDialogOpen(true)}>Create your first brand</Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {brands.map((brand) => (
+                <Link href={`/brands/${brand.id}`} key={brand.id} className="block">
+                  <Card className="h-full transition-all hover:shadow-md">
+                    <CardHeader>
+                      <CardTitle>{brand.name}</CardTitle>
+                    </CardHeader>
+                    <CardFooter className="pt-0">
+                      <Button variant="outline" className="w-full justify-start">
+                        Manage Brand
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>

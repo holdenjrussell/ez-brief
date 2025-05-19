@@ -32,6 +32,55 @@ export interface Database {
           updated_at?: string
         }
       }
+      brands: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          logo_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          logo_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          logo_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      brand_positioning: {
+        Row: {
+          id: string
+          brand_id: string
+          content: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          brand_id: string
+          content?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          brand_id?: string
+          content?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 } 
