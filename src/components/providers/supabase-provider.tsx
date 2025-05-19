@@ -23,6 +23,24 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
+  // Helper function for more reliable navigation
+  const safeNavigate = (path: string) => {
+    console.log(`[SupabaseProvider] Attempting to navigate to: ${path}`);
+    
+    // Try Next.js router first
+    try {
+      router.push(path);
+    } catch (e) {
+      console.error('[SupabaseProvider] Router navigation failed, using direct location:', e);
+    }
+    
+    // Use direct navigation as a backup, with short delay to allow router to attempt first
+    setTimeout(() => {
+      console.log(`[SupabaseProvider] Executing direct navigation to: ${path}`);
+      window.location.href = path;
+    }, 100);
+  };
+
   useEffect(() => {
     const getSession = async () => {
       console.log('[SupabaseProvider] Getting session...');
@@ -44,10 +62,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         console.log('[SupabaseProvider] Logged in as:', session.user.email)
         console.log('[SupabaseProvider] User ID:', session.user.id)
         
-        // Ensure dashboard redirect if authenticated
-        if (pathname === '/login' || pathname === '/signup') {
+        // Ensure dashboard redirect if authenticated and on auth page
+        if (pathname === '/login' || pathname === '/signup' || pathname.startsWith('/login?')) {
           console.log('[SupabaseProvider] Already authenticated but on auth page, redirecting to dashboard');
-          router.push('/dashboard');
+          safeNavigate('/dashboard');
         }
       }
     }
@@ -78,16 +96,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             console.error('[SupabaseProvider] Error checking localStorage:', e)
           }
           
-          // Directly handle redirect to dashboard after sign in
-          if (pathname === '/login' || pathname === '/signup') {
-            console.log('[SupabaseProvider] SIGNED_IN event - redirecting from auth page to dashboard');
-            router.push('/dashboard');
-          } else {
-            router.refresh();
-          }
+          // Force redirect to dashboard after sign in
+          console.log('[SupabaseProvider] SIGNED_IN event - forcing navigation to dashboard');
+          safeNavigate('/dashboard');
+          
         } else if (event === 'SIGNED_OUT') {
-          console.log('[SupabaseProvider] User signed out, refreshing session for redirect via middleware')
-          router.refresh()
+          console.log('[SupabaseProvider] User signed out, redirecting to login');
+          safeNavigate('/login');
         }
       }
     )
@@ -119,9 +134,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setSession(response.data.session);
         setUser(response.data.session.user);
         
-        // Manual redirect to dashboard after successful login
-        window.setTimeout(() => {
-          router.push('/dashboard');
+        // Force immediate navigation to dashboard after successful login
+        setTimeout(() => {
+          console.log('[SupabaseProvider] Executing direct navigation to dashboard after login');
+          window.location.href = '/dashboard';
         }, 100);
       }
         
@@ -142,7 +158,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // Clear session state immediately
         setSession(null);
         setUser(null);
-        router.push('/login');
+        
+        // Direct navigation to login page
+        window.location.href = '/login';
       }
       
       return response;

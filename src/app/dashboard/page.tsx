@@ -32,8 +32,18 @@ export default function DashboardPage() {
     isUserPresent: !!user, 
     userEmail: user?.email || 'none',
     isLoading,
-    pathname: typeof window !== 'undefined' ? window.location.pathname : 'unknown'
+    pathname: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+    url: typeof window !== 'undefined' ? window.location.href : 'unknown'
   });
+
+  // Force reload the page if we're coming from login with query parameters
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      console.log('[DashboardPage] Detected query parameters, cleaning URL');
+      // Remove query parameters by replacing the current URL with a clean one
+      window.history.replaceState({}, document.title, '/dashboard');
+    }
+  }, []);
 
   // First check session directly from Supabase to ensure we have accurate auth state
   useEffect(() => {
@@ -51,7 +61,9 @@ export default function DashboardPage() {
         
         if (!data.session && !isLoading) {
           console.log('[DashboardPage] No valid session found, redirecting to login');
-          router.push('/login');
+          // Use direct navigation for more reliable redirect
+          window.location.href = '/login';
+          return;
         }
       } catch (err) {
         console.error('[DashboardPage] Error verifying session:', err);
@@ -69,7 +81,8 @@ export default function DashboardPage() {
     
     if (!isLoading && !user && !isVerifyingAuth) {
       console.log('[DashboardPage] No user after loading completed, redirecting to login');
-      router.push('/login');
+      // Use direct navigation for reliable redirect
+      window.location.href = '/login';
     } else if (user) {
       console.log('[DashboardPage] User authenticated:', user.email);
     }
@@ -170,8 +183,8 @@ export default function DashboardPage() {
           <CardTitle>Debug Controls</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Button onClick={() => router.push('/dashboard')} variant="outline">
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => window.location.href = '/dashboard'} variant="outline">
               Force Navigate to Dashboard
             </Button>
             <Button 
@@ -188,11 +201,19 @@ export default function DashboardPage() {
               onClick={() => {
                 localStorage.removeItem('supabase.auth.token');
                 alert('Cleared local auth token');
-                router.refresh();
+                window.location.reload();
               }} 
               variant="outline"
             >
               Clear Auth Token
+            </Button>
+            <Button 
+              onClick={() => {
+                window.location.reload();
+              }} 
+              variant="outline"
+            >
+              Reload Page
             </Button>
           </div>
         </CardContent>

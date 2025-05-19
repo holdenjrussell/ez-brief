@@ -20,6 +20,8 @@ export default function LoginPage() {
 
   console.log('[LoginPage] Render with user:', user ? 'Present (email: ' + user.email + ')' : 'Not present')
   console.log('[LoginPage] isLoading:', isLoading);
+  console.log('[LoginPage] Current pathname:', typeof window !== 'undefined' ? window.location.pathname : 'unknown');
+  console.log('[LoginPage] Current URL:', typeof window !== 'undefined' ? window.location.href : 'unknown');
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -27,7 +29,19 @@ export default function LoginPage() {
     
     if (user && !isLoading) {
       console.log('[LoginPage] User already logged in, redirecting to dashboard...');
-      router.push('/dashboard');
+      
+      // First try Next.js navigation
+      try {
+        router.push('/dashboard');
+      } catch (e) {
+        console.error('[LoginPage] Router navigation failed:', e);
+      }
+      
+      // Use direct navigation as fallback
+      setTimeout(() => {
+        console.log('[LoginPage] Executing direct navigation to dashboard');
+        window.location.href = '/dashboard';
+      }, 200);
     }
   }, [user, isLoading, router]);
 
@@ -60,17 +74,9 @@ export default function LoginPage() {
         console.error("[LoginPage] Error checking session:", e);
       }
       
-      // Force navigation to dashboard with multiple approaches
-      console.log("[LoginPage] Attempting to navigate to dashboard...");
-      
-      // Approach 1: Normal navigation
-      router.push('/dashboard');
-      
-      // Approach 2: Delayed navigation as backup
-      setTimeout(() => {
-        console.log("[LoginPage] Executing delayed navigation to dashboard");
-        window.location.href = '/dashboard';
-      }, 1000);
+      // Force navigation to dashboard immediately
+      console.log("[LoginPage] Forcing navigation to dashboard after successful login");
+      window.location.href = '/dashboard';
       
     } catch (err: unknown) {
       console.error("[LoginPage] Login error:", err)
@@ -92,10 +98,8 @@ export default function LoginPage() {
             <p className="text-center mb-4">You are already logged in.</p>
             <Button onClick={() => {
               console.log("[LoginPage] Manually navigating to dashboard from already-logged-in state");
-              router.push('/dashboard');
-              
-              // Fallback option
-              setTimeout(() => window.location.href = '/dashboard', 500);
+              // Immediately use direct navigation for most reliable redirect
+              window.location.href = '/dashboard';
             }}>
               Go to Dashboard
             </Button>
