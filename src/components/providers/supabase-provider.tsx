@@ -2,15 +2,15 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
+import { Session, User, AuthChangeEvent, AuthResponse, AuthTokenResponse } from '@supabase/supabase-js'
 
 type SupabaseContextType = {
   user: User | null
   session: Session | null
   isLoading: boolean
-  signUp: (email: string, password: string) => Promise<any>
-  signIn: (email: string, password: string) => Promise<any>
-  signOut: () => Promise<any>
+  signUp: (email: string, password: string) => Promise<AuthResponse>
+  signIn: (email: string, password: string) => Promise<AuthResponse>
+  signOut: () => Promise<{ error: Error | null }>
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)

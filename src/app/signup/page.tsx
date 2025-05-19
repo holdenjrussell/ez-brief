@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { AuthError } from '@supabase/supabase-js'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -37,8 +38,11 @@ export default function SignupPage() {
       } else {
         setSuccessMessage('Check your email for the confirmation link')
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign up')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof AuthError 
+        ? err.message 
+        : 'Failed to sign up'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
