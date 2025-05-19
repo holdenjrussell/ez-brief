@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -8,13 +8,22 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { AuthError } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signIn } = useSupabase()
+  const { signIn, user } = useSupabase()
+  const router = useRouter()
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,11 +37,8 @@ export default function LoginPage() {
         throw error
       }
       
-      // If we got here, login was successful
-      console.log("Login successful, redirecting to dashboard")
-      
-      // Force a hard navigation to the dashboard
-      window.location.href = '/dashboard'
+      // Login successful, router.push will happen in the useEffect when user state updates
+      console.log("Login successful")
     } catch (err: unknown) {
       console.error("Login error:", err)
       const errorMessage = err instanceof AuthError 
