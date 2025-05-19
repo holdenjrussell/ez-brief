@@ -22,6 +22,7 @@ export default function LoginPage() {
   console.log('[LoginPage] isLoading:', isLoading);
 
   // Redirect if user is already logged in
+  /* // Temporarily disabling this useEffect to rely on middleware for redirection after SIGNED_IN event
   useEffect(() => {
     console.log('[LoginPage] useEffect triggered, user:', user ? 'Authenticated' : 'Not authenticated');
     
@@ -31,6 +32,7 @@ export default function LoginPage() {
       router.refresh();
     }
   }, [user, isLoading, router]);
+  */
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,9 +50,11 @@ export default function LoginPage() {
       console.log("[LoginPage] Login successful");
       
       // Manual refresh for additional state synchronization
+      /* // REMOVED: SupabaseProvider's onAuthStateChange should handle refresh
       window.setTimeout(() => {
         router.refresh();
       }, 500);
+      */
       
     } catch (err: unknown) {
       console.error("[LoginPage] Login error:", err)
