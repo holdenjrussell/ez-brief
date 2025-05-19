@@ -34,7 +34,8 @@ export async function middleware(request: NextRequest) {
   )
 
   // Get the user. This will refresh the session if expired.
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser()
+  console.log(`[Middleware] Request path: ${request.nextUrl.pathname}, User from getUser(): ${user ? user.email : 'null'}, Error: ${getUserError || 'none'}`);
 
   // If there's no session and the user is trying to access a protected route
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
@@ -42,16 +43,19 @@ export async function middleware(request: NextRequest) {
                        request.nextUrl.pathname.startsWith('/signup')
 
   if (!user && isProtectedRoute) {
+    console.log(`[Middleware] Condition: !user && isProtectedRoute. User is null. Path: ${request.nextUrl.pathname}. Redirecting to /login`);
     const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
   // If the user is authenticated and trying to access auth routes
   if (user && isAuthRoute) {
+    console.log(`[Middleware] Condition: user && isAuthRoute. User: ${user.email}. Path: ${request.nextUrl.pathname}. Redirecting to /dashboard`);
     const redirectUrl = new URL('/dashboard', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
+  console.log(`[Middleware] No redirect conditions met. Path: ${request.nextUrl.pathname}, User: ${user ? user.email : 'null'}. Proceeding.`);
   return response
 }
 

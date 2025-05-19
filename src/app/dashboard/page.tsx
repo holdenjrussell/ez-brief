@@ -28,8 +28,9 @@ export default function DashboardPage() {
   const [isCreatingBrand, setIsCreatingBrand] = useState(false)
   
   useEffect(() => {
+    console.log(`[DashboardPage] useEffect triggered. isLoading: ${isLoading}, User: ${user ? user.email : 'null'}`);
     if (!isLoading && !user) {
-      console.log('User not authenticated, redirecting to login')
+      console.log('[DashboardPage] Conditions met: !isLoading && !user. Redirecting to /login.');
       router.push('/login')
     }
   }, [user, isLoading, router])
@@ -106,14 +107,17 @@ export default function DashboardPage() {
 
   // If still loading or no user, show loading state
   if (isLoading) {
+    console.log('[DashboardPage] Rendering Loading state (isLoading is true)');
     return <div className="container mx-auto py-10 px-4">Loading...</div>
   }
 
   // Only render dashboard content if we have a user
   if (!user) {
+    console.log('[DashboardPage] Rendering null (isLoading is false, but no user before return). useEffect should handle redirect.');
     return null // We'll redirect in the useEffect
   }
 
+  console.log(`[DashboardPage] Rendering actual dashboard content. User: ${user.email}`);
   return (
     <div className="container mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>

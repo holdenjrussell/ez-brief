@@ -55,13 +55,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         
         // Handling specific auth events for better page flow
         if (event === 'SIGNED_IN') {
-          console.log('[SupabaseProvider] User signed in, redirecting to dashboard')
-          router.push('/dashboard')
-          // Force a refresh to ensure all components are aware of the authentication change
+          console.log('[SupabaseProvider] User signed in, refreshing session for redirect via middleware')
           router.refresh()
         } else if (event === 'SIGNED_OUT') {
-          console.log('[SupabaseProvider] User signed out, redirecting to home')
-          router.push('/')
+          console.log('[SupabaseProvider] User signed out, refreshing session for redirect via middleware')
           router.refresh()
         }
       }
