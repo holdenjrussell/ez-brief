@@ -15,15 +15,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signIn, user } = useSupabase()
+  const { signIn, user, isLoading } = useSupabase()
   const router = useRouter()
+
+  console.log('[LoginPage] Render with user:', user ? 'Present (email: ' + user.email + ')' : 'Not present')
+  console.log('[LoginPage] isLoading:', isLoading);
 
   // Redirect if user is already logged in
   useEffect(() => {
-    if (user) {
-      router.push('/dashboard')
+    console.log('[LoginPage] useEffect triggered, user:', user ? 'Authenticated' : 'Not authenticated');
+    
+    if (user && !isLoading) {
+      console.log('[LoginPage] Redirecting to dashboard...');
+      router.push('/dashboard');
+      router.refresh();
     }
-  }, [user, router])
+  }, [user, isLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,16 +38,22 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      console.log('[LoginPage] Attempting login with:', email);
       const { error } = await signIn(email, password)
       
       if (error) {
         throw error
       }
       
-      // Login successful, router.push will happen in the useEffect when user state updates
-      console.log("Login successful")
+      console.log("[LoginPage] Login successful");
+      
+      // Manual refresh for additional state synchronization
+      window.setTimeout(() => {
+        router.refresh();
+      }, 500);
+      
     } catch (err: unknown) {
-      console.error("Login error:", err)
+      console.error("[LoginPage] Login error:", err)
       const errorMessage = err instanceof AuthError 
         ? err.message 
         : 'Failed to sign in'
@@ -48,6 +61,20 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // If we're definitely logged in, don't display the login form
+  if (user && !isLoading) {
+    return (
+      <div className="container max-w-md mx-auto py-10">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <p className="text-center mb-4">You are already logged in.</p>
+            <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
