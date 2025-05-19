@@ -20,7 +20,7 @@ interface BrandPositioningProps {
 type PositioningData = {
   id: string
   brand_id: string
-  content: any
+  content: Record<string, unknown>
 }
 
 export default function BrandPositioning({ brandId }: BrandPositioningProps) {
@@ -142,7 +142,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
     <Card>
       <CardHeader>
         <CardTitle>Brand Positioning</CardTitle>
-        <CardDescription>Define your brand's unique position in the market</CardDescription>
+        <CardDescription>Define your brand&apos;s unique position in the market</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4">
@@ -152,7 +152,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleBold().run()}
-              className={editor?.isActive('bold') ? 'bg-slate-100' : ''}
+              className={editor?.isActive("bold") ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               Bold
@@ -162,7 +162,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleItalic().run()}
-              className={editor?.isActive('italic') ? 'bg-slate-100' : ''}
+              className={editor?.isActive("italic") ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               Italic
@@ -172,7 +172,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleUnderline().run()}
-              className={editor?.isActive('underline') ? 'bg-slate-100' : ''}
+              className={editor?.isActive("underline") ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               Underline
@@ -182,7 +182,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={editor?.isActive('heading', { level: 1 }) ? 'bg-slate-100' : ''}
+              className={editor?.isActive("heading", { level: 1 }) ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               H1
@@ -192,7 +192,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={editor?.isActive('heading', { level: 2 }) ? 'bg-slate-100' : ''}
+              className={editor?.isActive("heading", { level: 2 }) ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               H2
@@ -202,7 +202,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              className={editor?.isActive('bulletList') ? 'bg-slate-100' : ''}
+              className={editor?.isActive("bulletList") ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               Bullet List
@@ -212,7 +212,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
               variant="outline"
               size="sm"
               onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-              className={editor?.isActive('orderedList') ? 'bg-slate-100' : ''}
+              className={editor?.isActive("orderedList") ? "bg-slate-100" : ""}
               disabled={!editor}
             >
               Ordered List
@@ -222,7 +222,7 @@ export default function BrandPositioning({ brandId }: BrandPositioningProps) {
         </div>
         <div className="flex justify-end">
           <Button onClick={savePositioning} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Positioning'}
+            {isSaving ? "Saving..." : "Save Positioning"}
           </Button>
         </div>
       </CardContent>

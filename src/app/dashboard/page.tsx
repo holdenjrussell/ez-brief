@@ -19,7 +19,7 @@ type Brand = {
 }
 
 export default function DashboardPage() {
-  const { user, isLoading, session } = useSupabase()
+  const { user, isLoading } = useSupabase()
   const router = useRouter()
   const [brands, setBrands] = useState<Brand[]>([])
   const [isLoadingBrands, setIsLoadingBrands] = useState(true)
@@ -176,7 +176,7 @@ export default function DashboardPage() {
           ) : brands.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-10">
-                <p className="text-gray-500 mb-4">You don't have any brands yet</p>
+                <p className="text-gray-500 mb-4">You don&apos;t have any brands yet</p>
                 <Button onClick={() => setDialogOpen(true)}>Create your first brand</Button>
               </CardContent>
             </Card>
