@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
