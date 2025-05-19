@@ -4,8 +4,18 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+interface EnvironmentInfo {
+  pathname: string;
+  href: string;
+  host: string;
+  protocol: string;
+  cookies: string;
+  userAgent: string;
+  timestamp: string;
+}
+
 export default function DashboardTestPage() {
-  const [info, setInfo] = useState<any>({});
+  const [info, setInfo] = useState<EnvironmentInfo | null>(null);
   
   useEffect(() => {
     // Gather information about the current environment
@@ -30,7 +40,7 @@ export default function DashboardTestPage() {
         </CardHeader>
         <CardContent>
           <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-96">
-            {JSON.stringify(info, null, 2)}
+            {info ? JSON.stringify(info, null, 2) : "Loading..."}
           </pre>
         </CardContent>
       </Card>

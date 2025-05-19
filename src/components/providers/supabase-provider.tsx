@@ -108,7 +108,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [pathname, router])
+  }, [pathname, router, safeNavigate])
 
   const signUp = async (email: string, password: string) => {
     try {

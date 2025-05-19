@@ -73,7 +73,7 @@ export default function DashboardPage() {
     };
     
     verifySession();
-  }, []);
+  }, [isLoading]);
   
   // Handle redirects based on user context hook
   useEffect(() => {

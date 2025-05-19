@@ -3,12 +3,11 @@
 import Link from 'next/link'
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
 
 export function Navbar() {
   const { user, signOut } = useSupabase()
-  const router = useRouter()
-
+  // Router is no longer used as we're using direct navigation
+  
   const handleSignOut = async () => {
     await signOut()
     window.location.href = '/';
