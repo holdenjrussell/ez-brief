@@ -2,10 +2,29 @@
 
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
-  const { user } = useSupabase()
+  const { user, isLoading } = useSupabase()
+  const router = useRouter()
+  
+  useEffect(() => {
+    if (!isLoading && !user) {
+      console.log('User not authenticated, redirecting to login')
+      router.push('/login')
+    }
+  }, [user, isLoading, router])
+
+  // If still loading or no user, show loading state
+  if (isLoading) {
+    return <div className="container mx-auto py-10 px-4">Loading...</div>
+  }
+
+  // Only render dashboard content if we have a user
+  if (!user) {
+    return null // We'll redirect in the useEffect
+  }
 
   return (
     <div className="container mx-auto py-10 px-4">

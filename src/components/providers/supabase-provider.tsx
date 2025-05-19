@@ -31,12 +31,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       setIsLoading(false)
+
+      // Log the session state for debugging
+      console.log('Current session:', session ? 'Authenticated' : 'Not authenticated')
+      if (session?.user) {
+        console.log('Logged in as:', session.user.email)
+      }
     }
 
     getSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => {
+      (event: AuthChangeEvent, session: Session | null) => {
+        console.log('Auth state changed:', event, session ? 'Authenticated' : 'Not authenticated')
         setSession(session)
         setUser(session?.user ?? null)
         setIsLoading(false)

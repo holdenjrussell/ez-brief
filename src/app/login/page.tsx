@@ -24,15 +24,19 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await signIn(email, password)
+      const { data, error } = await signIn(email, password)
       
       if (error) {
         throw error
       }
       
-      router.push('/dashboard')
-      router.refresh()
+      // If we got here, login was successful
+      console.log("Login successful, redirecting to dashboard")
+      
+      // Force a hard navigation to the dashboard
+      window.location.href = '/dashboard'
     } catch (err: unknown) {
+      console.error("Login error:", err)
       const errorMessage = err instanceof AuthError 
         ? err.message 
         : 'Failed to sign in'
