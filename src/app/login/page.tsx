@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -22,17 +22,14 @@ export default function LoginPage() {
   console.log('[LoginPage] isLoading:', isLoading);
 
   // Redirect if user is already logged in
-  /* // Temporarily disabling this useEffect to rely on middleware for redirection after SIGNED_IN event
   useEffect(() => {
     console.log('[LoginPage] useEffect triggered, user:', user ? 'Authenticated' : 'Not authenticated');
     
     if (user && !isLoading) {
-      console.log('[LoginPage] Redirecting to dashboard...');
+      console.log('[LoginPage] User already logged in, redirecting to dashboard...');
       router.push('/dashboard');
-      router.refresh();
     }
   }, [user, isLoading, router]);
-  */
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,22 +54,23 @@ export default function LoginPage() {
         console.log("[LoginPage] User from session:", session.data.session?.user?.email || "None");
         
         // Check local storage
-        const authStorage = localStorage.getItem('supabase-auth');
+        const authStorage = localStorage.getItem('supabase.auth.token');
         console.log("[LoginPage] Auth data in localStorage:", authStorage ? "Present" : "Not present");
       } catch (e) {
         console.error("[LoginPage] Error checking session:", e);
       }
       
-      // Now redirect
+      // Force navigation to dashboard with multiple approaches
       console.log("[LoginPage] Attempting to navigate to dashboard...");
+      
+      // Approach 1: Normal navigation
       router.push('/dashboard');
       
-      // Manual refresh for additional state synchronization
-      /* // REMOVED: SupabaseProvider's onAuthStateChange should handle refresh
-      window.setTimeout(() => {
-        router.refresh();
-      }, 500);
-      */
+      // Approach 2: Delayed navigation as backup
+      setTimeout(() => {
+        console.log("[LoginPage] Executing delayed navigation to dashboard");
+        window.location.href = '/dashboard';
+      }, 1000);
       
     } catch (err: unknown) {
       console.error("[LoginPage] Login error:", err)
@@ -92,7 +90,15 @@ export default function LoginPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-10">
             <p className="text-center mb-4">You are already logged in.</p>
-            <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
+            <Button onClick={() => {
+              console.log("[LoginPage] Manually navigating to dashboard from already-logged-in state");
+              router.push('/dashboard');
+              
+              // Fallback option
+              setTimeout(() => window.location.href = '/dashboard', 500);
+            }}>
+              Go to Dashboard
+            </Button>
           </CardContent>
         </Card>
       </div>

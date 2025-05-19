@@ -45,36 +45,56 @@ export async function middleware(request: NextRequest) {
   // Get the user. This will refresh the session if expired.
   console.log(`[Middleware] Attempting to get user...`);
   const { data: { user }, error: getUserError } = await supabase.auth.getUser()
-  console.log(`[Middleware] Request path: ${request.nextUrl.pathname}, User from getUser(): ${user ? user.email : 'null'}, Error: ${getUserError || 'none'}`);
+  
+  // Also get the session directly
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  console.log(`[Middleware] User authentication status:`, {
+    path: request.nextUrl.pathname,
+    hasUser: !!user,
+    userEmail: user?.email || 'none',
+    hasSession: !!session,
+    getUserError: getUserError?.message || 'none',
+    sessionError: sessionError?.message || 'none',
+  });
 
   // If there's no session and the user is trying to access a protected route
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
+                          request.nextUrl.pathname.startsWith('/brands');
+                          
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || 
-                       request.nextUrl.pathname.startsWith('/signup')
+                     request.nextUrl.pathname.startsWith('/signup');
 
   console.log(`[Middleware] Route type: ${isProtectedRoute ? 'Protected' : (isAuthRoute ? 'Auth' : 'Public')}`);
 
   if (!user && isProtectedRoute) {
-    console.log(`[Middleware] Condition: !user && isProtectedRoute. User is null. Path: ${request.nextUrl.pathname}. Redirecting to /login`);
-    const redirectUrl = new URL('/login', request.url)
-    return NextResponse.redirect(redirectUrl)
+    console.log(`[Middleware] No authenticated user for protected route: ${request.nextUrl.pathname}. Redirecting to /login`);
+    // Always include a cache-busting query parameter
+    const redirectUrl = new URL(`/login?from=${encodeURIComponent(request.nextUrl.pathname)}&t=${Date.now()}`, request.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
   // If the user is authenticated and trying to access auth routes
   if (user && isAuthRoute) {
-    console.log(`[Middleware] Condition: user && isAuthRoute. User: ${user.email}. Path: ${request.nextUrl.pathname}. Redirecting to /dashboard`);
-    const redirectUrl = new URL('/dashboard', request.url)
-    return NextResponse.redirect(redirectUrl)
+    console.log(`[Middleware] Authenticated user (${user.email}) accessing auth route: ${request.nextUrl.pathname}. Redirecting to /dashboard`);
+    // Add a timestamp to prevent caching issues
+    const redirectUrl = new URL(`/dashboard?t=${Date.now()}`, request.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
   console.log(`[Middleware] No redirect conditions met. Path: ${request.nextUrl.pathname}, User: ${user ? user.email : 'null'}. Proceeding.`);
   console.log(`[Middleware] END - Allowing access to: ${request.nextUrl.pathname}`);
-  return response
+  
+  // Add cache control headers to prevent caching of authenticated responses
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  
+  return response;
 }
 
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/brands/:path*',
     '/login',
     '/signup',
   ],

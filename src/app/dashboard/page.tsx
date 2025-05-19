@@ -26,20 +26,54 @@ export default function DashboardPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newBrandName, setNewBrandName] = useState('')
   const [isCreatingBrand, setIsCreatingBrand] = useState(false)
+  const [isVerifyingAuth, setIsVerifyingAuth] = useState(true)
   
   console.log('[DashboardPage] MOUNT - Initial render with:', { 
     isUserPresent: !!user, 
     userEmail: user?.email || 'none',
-    isLoading 
+    isLoading,
+    pathname: typeof window !== 'undefined' ? window.location.pathname : 'unknown'
   });
-  
+
+  // First check session directly from Supabase to ensure we have accurate auth state
   useEffect(() => {
-    console.log(`[DashboardPage] useEffect triggered. isLoading: ${isLoading}, User: ${user ? user.email : 'null'}`);
-    if (!isLoading && !user) {
-      console.log('[DashboardPage] Conditions met: !isLoading && !user. Redirecting to /login.');
-      router.push('/login')
+    const verifySession = async () => {
+      try {
+        console.log('[DashboardPage] Verifying session directly from Supabase');
+        const { supabase } = await import('@/lib/supabase/client');
+        const { data, error } = await supabase.auth.getSession();
+        
+        console.log('[DashboardPage] Direct session check:', { 
+          hasSession: !!data.session,
+          sessionUser: data.session?.user?.email || 'none',
+          error: error ? true : false
+        });
+        
+        if (!data.session && !isLoading) {
+          console.log('[DashboardPage] No valid session found, redirecting to login');
+          router.push('/login');
+        }
+      } catch (err) {
+        console.error('[DashboardPage] Error verifying session:', err);
+      } finally {
+        setIsVerifyingAuth(false);
+      }
+    };
+    
+    verifySession();
+  }, []);
+  
+  // Handle redirects based on user context hook
+  useEffect(() => {
+    console.log(`[DashboardPage] Auth state changed. isLoading: ${isLoading}, User: ${user ? user.email : 'null'}`);
+    
+    if (!isLoading && !user && !isVerifyingAuth) {
+      console.log('[DashboardPage] No user after loading completed, redirecting to login');
+      router.push('/login');
+    } else if (user) {
+      console.log('[DashboardPage] User authenticated:', user.email);
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, isVerifyingAuth]);
 
   // Fetch brands when the component mounts and user is available
   useEffect(() => {
@@ -47,6 +81,7 @@ export default function DashboardPage() {
       if (!user) return
       
       try {
+        console.log('[DashboardPage] Fetching brands for user:', user.email);
         const { supabase } = await import('@/lib/supabase/client')
         const { data, error } = await supabase
           .from('brands')
@@ -57,6 +92,7 @@ export default function DashboardPage() {
           throw error
         }
         
+        console.log('[DashboardPage] Fetched brands:', data?.length || 0);
         setBrands(data as Brand[])
       } catch (error) {
         console.error('Error fetching brands:', error)
@@ -111,19 +147,19 @@ export default function DashboardPage() {
     }
   }
 
-  // If still loading or no user, show loading state
-  if (isLoading) {
-    console.log('[DashboardPage] Rendering Loading state (isLoading is true)');
-    return <div className="container mx-auto py-10 px-4">Loading...</div>
+  // If still loading or verifying auth, show loading state
+  if (isLoading || isVerifyingAuth) {
+    console.log('[DashboardPage] Rendering Loading state');
+    return <div className="container mx-auto py-10 px-4">Loading dashboard...</div>
   }
 
   // Only render dashboard content if we have a user
   if (!user) {
-    console.log('[DashboardPage] Rendering null (isLoading is false, but no user before return). useEffect should handle redirect.');
-    return null // We'll redirect in the useEffect
+    console.log('[DashboardPage] No user available, will redirect via useEffect');
+    return <div className="container mx-auto py-10 px-4">Checking authentication...</div>
   }
 
-  console.log(`[DashboardPage] Rendering actual dashboard content. User: ${user.email}`);
+  console.log(`[DashboardPage] Rendering dashboard content for user: ${user.email}`);
   return (
     <div className="container mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
@@ -147,6 +183,16 @@ export default function DashboardPage() {
               variant="outline"
             >
               Check Auth Session
+            </Button>
+            <Button 
+              onClick={() => {
+                localStorage.removeItem('supabase.auth.token');
+                alert('Cleared local auth token');
+                router.refresh();
+              }} 
+              variant="outline"
+            >
+              Clear Auth Token
             </Button>
           </div>
         </CardContent>
