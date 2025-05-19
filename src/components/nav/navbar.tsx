@@ -11,8 +11,14 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     await signOut()
-    router.push('/')
+    window.location.href = '/';
   }
+  
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('[Navbar] Dashboard button clicked, navigating directly');
+    window.location.href = '/dashboard';
+  };
 
   return (
     <nav className="border-b py-4">
@@ -24,9 +30,9 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <Link href="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
-              </Link>
+              <Button variant="ghost" onClick={handleDashboardClick}>
+                Dashboard
+              </Button>
               <Button onClick={handleSignOut} variant="outline">
                 Logout
               </Button>

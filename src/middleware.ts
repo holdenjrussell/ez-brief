@@ -5,6 +5,16 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 export async function middleware(request: NextRequest) {
   console.log(`[Middleware] START - Request to: ${request.nextUrl.pathname}`);
   
+  // Skip middleware for static resources
+  if (
+    request.nextUrl.pathname.includes('/_next/') ||
+    request.nextUrl.pathname.includes('/api/') ||
+    request.nextUrl.pathname.includes('/static/')
+  ) {
+    console.log(`[Middleware] Skipping for static resource: ${request.nextUrl.pathname}`);
+    return NextResponse.next();
+  }
+  
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -58,6 +68,10 @@ export async function middleware(request: NextRequest) {
     sessionError: sessionError?.message || 'none',
   });
 
+  // Check if there's a querystring that would indicate we're already in a redirect
+  const hasRedirectParam = request.nextUrl.searchParams.has('t') || 
+                         request.nextUrl.searchParams.has('from');
+                         
   // If there's no session and the user is trying to access a protected route
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
                           request.nextUrl.pathname.startsWith('/brands');
@@ -66,20 +80,26 @@ export async function middleware(request: NextRequest) {
                      request.nextUrl.pathname.startsWith('/signup');
 
   console.log(`[Middleware] Route type: ${isProtectedRoute ? 'Protected' : (isAuthRoute ? 'Auth' : 'Public')}`);
+  console.log(`[Middleware] Has redirect params: ${hasRedirectParam}`);
 
-  if (!user && isProtectedRoute) {
-    console.log(`[Middleware] No authenticated user for protected route: ${request.nextUrl.pathname}. Redirecting to /login`);
-    // Always include a cache-busting query parameter
-    const redirectUrl = new URL(`/login?from=${encodeURIComponent(request.nextUrl.pathname)}&t=${Date.now()}`, request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // Only perform redirects if we're not already in a redirect loop
+  if (!hasRedirectParam) {
+    if (!user && isProtectedRoute) {
+      console.log(`[Middleware] No authenticated user for protected route: ${request.nextUrl.pathname}. Redirecting to /login`);
+      // Always include a cache-busting query parameter
+      const redirectUrl = new URL(`/login?from=${encodeURIComponent(request.nextUrl.pathname)}&t=${Date.now()}`, request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-  // If the user is authenticated and trying to access auth routes
-  if (user && isAuthRoute) {
-    console.log(`[Middleware] Authenticated user (${user.email}) accessing auth route: ${request.nextUrl.pathname}. Redirecting to /dashboard`);
-    // Add a timestamp to prevent caching issues
-    const redirectUrl = new URL(`/dashboard?t=${Date.now()}`, request.url);
-    return NextResponse.redirect(redirectUrl);
+    // If the user is authenticated and trying to access auth routes
+    if (user && isAuthRoute) {
+      console.log(`[Middleware] Authenticated user (${user.email}) accessing auth route: ${request.nextUrl.pathname}. Redirecting to /dashboard`);
+      // Add a timestamp to prevent caching issues
+      const redirectUrl = new URL(`/dashboard?t=${Date.now()}`, request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  } else {
+    console.log(`[Middleware] Skipping redirect checks due to existing redirect parameters`);
   }
 
   console.log(`[Middleware] No redirect conditions met. Path: ${request.nextUrl.pathname}, User: ${user ? user.email : 'null'}. Proceeding.`);
@@ -93,9 +113,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/brands/:path*',
-    '/login',
-    '/signup',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 } 
